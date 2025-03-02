@@ -21,7 +21,12 @@ def menu() -> None:
     args = parser.parse_args()
 
     variables = vars(args)
-    print(variables)
+
+    config = fm.get_config()
+    if config is OSError:
+        return
+    Expense.count = int(config["expenses_count"])
+
     match variables['option']:
         case 'add':
             add_expense(variables)
@@ -45,7 +50,10 @@ def add_expense(new_expense: Expense) -> None:
         print("Error. Please enter the expense description.")
         return
 
+    
+
     expense = Expense(date.today().strftime("%d-%m-%Y"), new_expense['description'], new_expense['amount'])
+    print(Expense.count)
     fm.store_expense_in_file(expense)
 
 

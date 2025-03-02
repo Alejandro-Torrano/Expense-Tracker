@@ -2,10 +2,12 @@ import json
 from expense_tracker import Expense
 
 FOLDER_PATH : str = "Storage/"
+CONFIG_PATH : str = "config.json"
 
-def create_file(file_path: str, expense: dict) -> None:
+def create_file(file_path: str, expense: Expense) -> None:
     with open(file_path, "w", encoding="utf-8") as file:
-        json.dump([expense], file, indent=4)
+        json.dump([expense_to_dict(expense)], file, indent=4)
+        update_expense_count(expense.count)
 
 def store_expense_in_file(expense: Expense) -> None:
     _, month, year = expense.date.split("-")
@@ -14,13 +16,14 @@ def store_expense_in_file(expense: Expense) -> None:
 
     stored_expenses: list = get_stored_expenses(file_path)
     if len(stored_expenses) == 0:
-        create_file(file_path, expense_dict)
+        create_file(file_path, expense)
         return
     
     stored_expenses.append(expense_dict)
     try:
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(stored_expenses, file, indent=4)
+            update_expense_count(expense.count)
     except:
         print("Error. Can't save the file.")
 
@@ -42,3 +45,22 @@ def expense_to_dict(expense: Expense) -> dict:
     }
 
     return new_dict
+
+def get_config() -> dict:
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except:
+        print("Error to load the config.")
+        return OSError
+
+
+def update_expense_count(last_expense: int) -> None:
+    config = get_config()
+    try:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as file:
+            print(last_expense)
+            config["expenses_count"] = last_expense
+            json.dump(config, file, indent=4)
+    except:
+        print("Error at update the expenses count.")
