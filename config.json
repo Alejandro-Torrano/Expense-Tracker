@@ -1,4 +1,5 @@
 {
     "expenses_count": 0,
-    "store_folder_path": "Storage"
+    "store_folder_path": "Storage/",
+    "store_file_name": "expenses"
 }

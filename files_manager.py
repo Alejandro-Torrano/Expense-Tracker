@@ -1,66 +1,70 @@
 import json
-from expense_tracker import Expense
 
-FOLDER_PATH : str = "Storage/"
-CONFIG_PATH : str = "config.json"
+#Este modulo solo acepta y retorna diccionarios
 
-def create_file(file_path: str, expense: Expense) -> None:
-    with open(file_path, "w", encoding="utf-8") as file:
-        json.dump([expense_to_dict(expense)], file, indent=4)
-        update_expense_count(expense.count)
 
-def store_expense_in_file(expense: Expense) -> None:
-    _, month, year = expense.date.split("-")
-    file_path: str = FOLDER_PATH + year + "-" + month + ".json"
-    expense_dict: dict = expense_to_dict(expense)
+def create_file(file_path: str, expense: dict) -> True:
+    try:
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump([expense], file, indent=4)
+            return True
+    except:
+        print("Error. Can't create the save file.")
+        return False
 
-    stored_expenses: list = get_stored_expenses(file_path)
+def store_expense_in_file(expense: dict) -> bool:
+    config = get_config()
+    file_path: str = config["store_folder_path"] + config["store_file_name"] +".json"
+
+    stored_expenses: list = get_stored_expenses()
     if len(stored_expenses) == 0:
-        create_file(file_path, expense)
-        return
+        return create_file(file_path, expense)
     
-    stored_expenses.append(expense_dict)
+    stored_expenses.append(expense)
     try:
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(stored_expenses, file, indent=4)
-            update_expense_count(expense.count)
+            return True
     except:
         print("Error. Can't save the file.")
+        return False
 
+def update_expenses_in_file(updated_expenses: list[dict]) -> bool:
+    config = get_config()
+    file_path: str = config["store_folder_path"] + config["store_file_name"] +".json"
+    try:
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(updated_expenses, file, indent=4)
+            return True
+    except:
+        print("Error at update the expenses file.")
+        return False
 
-
-def get_stored_expenses(file_path: str) -> list:
+def get_stored_expenses() -> list[dict]:
+    config = get_config()
+    file_path: str = config["store_folder_path"] + config["store_file_name"] +".json"
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             return json.load(file)
     except:
         return []
 
-def expense_to_dict(expense: Expense) -> dict:
-    new_dict = {
-        "id": expense.id,
-        "date": expense.date,
-        "description": expense.description,
-        "amount": expense.amount
-    }
-
-    return new_dict
-
 def get_config() -> dict:
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as file:
+        with open("config.json", "r", encoding="utf-8") as file:
             return json.load(file)
     except:
         print("Error to load the config.")
         return OSError
 
 
-def update_expense_count(last_expense: int) -> None:
+def update_expense_count(last_expense: int) -> bool:
     config = get_config()
     try:
-        with open(CONFIG_PATH, "w", encoding="utf-8") as file:
-            print(last_expense)
+        with open("config.json", "w", encoding="utf-8") as file:
             config["expenses_count"] = last_expense
             json.dump(config, file, indent=4)
+            return True
     except:
         print("Error at update the expenses count.")
+        return False
