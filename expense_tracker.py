@@ -22,7 +22,7 @@ def menu() -> None:
     args = parser.parse_args()
 
     variables = vars(args)
-
+    
     config = fm.get_config()
     if config is OSError:
         return
@@ -32,40 +32,68 @@ def menu() -> None:
         case 'add':
             add_expense(variables)
         case 'remove':
-            remove_expense(variables['id'])
+            remove_expense(variables)
         case 'update':
-            pass
+            update_expense(variables)
         case 'list':
             pass
 
-def add_expense(new_expense: Expense) -> None:
-    if new_expense['amount'] is None:
+def add_expense(variables: dict) -> None:
+    if variables['amount'] is None:
         print("Error. Please enter the expense amount.")
         return
 
-    if new_expense['amount'] <= 0:
+    if variables['amount'] <= 0:
         print("Error. The expense amount must be greater than 0.")
         return
     
-    if new_expense['description'] is None:
+    if variables['description'] is None:
         print("Error. Please enter the expense description.")
         return
 
     
 
-    expense = Expense(date.today().strftime("%d-%m-%Y"), new_expense['description'], new_expense['amount'])
+    expense = Expense(date.today().strftime("%d-%m-%Y"), variables['description'], variables['amount'])
     if fm.store_expense_in_file(expense_to_dict(expense)) == True:
         if fm.update_expense_count(Expense.last_id + 1) == True:
             Expense.last_id += 1
 
-def remove_expense(expense_id: int) -> None:
+def remove_expense(variables: dict) -> None:
+    if variables['id'] is None:
+        print("Please input the expense id.")
+        return
+
     stored_expenses: list[dict] = fm.get_stored_expenses()
 
     for expense in stored_expenses:
-        if expense["id"] == expense_id:
+        if expense["id"] == variables['id']:
             stored_expenses.remove(expense)
             fm.update_expenses_in_file(stored_expenses)
             break
+
+def update_expense(variables: dict) -> None:
+    if variables['id'] is None:
+        print("Please input expense id")
+        return
+
+
+    if variables['amount'] is None and variables['description'] is None:
+        print("Plese input a new expense or description to update.")
+        return
+
+    stored_expenses: list[dict] = fm.get_stored_expenses()
+    
+    for expense in stored_expenses:
+        if expense["id"] == variables['id']:
+            if variables['amount'] is not None:
+                expense['amount'] = variables['amount']
+            if variables['description'] is not None:
+                expense['description'] = variables['description']
+
+            fm.update_expenses_in_file(stored_expenses)
+            break
+    
+    print("Error. Expense id not finded.")
 
 def expense_to_dict(expense: Expense) -> dict:
     new_dict = {
