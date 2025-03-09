@@ -17,6 +17,7 @@ def menu() -> None:
     parser.add_argument('-d', '--description', type=str, help="Short description", required=False)
     parser.add_argument('-a', '--amount', type=float, help="Amount of the expense", required=False)
     parser.add_argument('-id', '--id', type=int, help="Id of expense", required=False)
+    parser.add_argument('-m', '--month', type=int, choices=[1,2,3,4,5,6,7,8,9,10,11,12], help="Summary of the month",required=False)
 
 
     args = parser.parse_args()
@@ -36,7 +37,9 @@ def menu() -> None:
         case 'update':
             update_expense(variables)
         case 'list':
-            pass
+            list_expenses(variables)
+        case 'summary':
+            expenses_summary(variables)
 
 def add_expense(variables: dict) -> None:
     if variables['amount'] is None:
@@ -94,6 +97,37 @@ def update_expense(variables: dict) -> None:
             break
     
     print("Error. Expense id not finded.")
+
+def list_expenses(variables: dict) -> None:
+    stored_expenses: list[dict] = fm.get_stored_expenses()
+
+    print("ID   Date          Description                      Amount")
+    for expense in stored_expenses:
+        if variables['month'] is not None:
+            exp_date: str = expense['date']
+            _, month, _ = exp_date.split("-")
+            if int(month) != variables['month']:
+                continue
+        space = " "
+        description_len = len(expense['description'])
+        for _ in range(30 - description_len):
+            space += " "
+
+        print(expense['id'], "  ", expense['date'], "  ", expense['description'], space, expense['amount'])
+
+def expenses_summary(variables) -> None:
+    stored_expenses: list[dict] = fm.get_stored_expenses()
+    summary = 0
+    for expense in stored_expenses:
+        if variables['month'] is None:
+            summary += expense['amount']
+        else:
+            exp_date: str = expense['date']
+            _, month, _ = exp_date.split("-")
+            if int(month) == variables['month']:
+                summary += expense['amount']
+
+    print("Total expenses: $",summary) if variables['month'] is None else print("Total expenses of ", date(2024, variables['month'], 1).strftime("%B"), ": $", summary)
 
 def expense_to_dict(expense: Expense) -> dict:
     new_dict = {
